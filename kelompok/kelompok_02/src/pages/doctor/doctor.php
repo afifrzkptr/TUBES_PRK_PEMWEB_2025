@@ -9,67 +9,120 @@ $where = $filter ? "WHERE specialization = '$filter'" : '';
 // Ambil data dokter
 $result = $conn->query("SELECT * FROM doctors $where ORDER BY id_doctor DESC");
 
-// Ambil semua spesialisasi unik (untuk filter dropdown)
+// Ambil semua spesialisasi unik
 $specs = $conn->query("SELECT DISTINCT specialization FROM doctors ORDER BY specialization ASC");
+
+// Fungsi aman
+function safe($v) {
+  return htmlspecialchars($v ?? "—", ENT_QUOTES, 'UTF-8');
+}
 ?>
 
-<main class="max-w-7xl mx-auto mt-10 px-4 sm:px-6 lg:px-8 animate-fade-in">
+<main class="max-w-7xl mx-auto mt-14 px-4 sm:px-6 lg:px-8 animate-fade-in">
+
+  <!-- HEADER -->
   <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
     <div>
       <h1 class="text-3xl font-extrabold text-navytube">Manajemen Data Dokter</h1>
-      <p class="text-sm text-gray-600">Kelola data dokter dan spesialisasi di rumah sakit.</p>
+      <p class="text-sm text-gray-600">Kelola data dokter dan spesialisasi rumah sakit.</p>
     </div>
 
-    <div class="flex gap-2 items-center">
+    <div class="flex gap-3 items-center">
+
+      <!-- FILTER -->
       <form method="GET">
-        <select name="specialization" class="input-field" onchange="this.form.submit()">
+        <select name="specialization" 
+                class="input-field px-3 py-2 border rounded-md shadow-sm"
+                onchange="this.form.submit()">
           <option value="">Semua Spesialisasi</option>
           <?php while ($s = $specs->fetch_assoc()): ?>
-            <option value="<?php echo $s['specialization']; ?>" <?php if ($filter == $s['specialization']) echo 'selected'; ?>>
-              <?php echo htmlspecialchars($s['specialization']); ?>
+            <option value="<?php echo safe($s['specialization']); ?>" 
+              <?php if ($filter == $s['specialization']) echo 'selected'; ?>>
+              <?php echo safe($s['specialization']); ?>
             </option>
           <?php endwhile; ?>
         </select>
       </form>
-      <a href="doctor_add.php" class="btn btn-primary">+ Tambah Dokter</a>
+
+      <!-- TAMBAH DOKTER BUTTON -->
+      <a href="doctor_add.php"
+         class="px-4 py-2 rounded-md font-semibold text-white bg-[#23395d] hover:bg-[#1d2f4f] shadow">
+        + Tambah Dokter
+      </a>
     </div>
   </div>
 
+  <!-- TABLE -->
   <div class="overflow-x-auto">
-    <table class="min-w-full border border-gray-200 rounded-xl shadow-md">
-      <thead class="bg-navytube text-white">
+  <table class="min-w-full border border-gray-200 rounded-xl shadow-md">
+
+    <thead class="bg-navytube text-white">
+      <tr>
+        <th class="py-3 px-4 text-left">ID</th>
+        <th class="py-3 px-4 text-left">Nama Dokter</th>
+        <th class="py-3 px-4 text-left">Spesialisasi</th>
+        <th class="py-3 px-4 text-left">Telepon</th>
+        <th class="py-3 px-4 text-left">Nomor STR</th>
+        <th class="py-3 px-4 text-left">Aksi</th>
+      </tr>
+    </thead>
+
+    <tbody class="bg-white">
+      <?php if ($result->num_rows > 0): ?>
+        <?php while ($row = $result->fetch_assoc()): ?>
+          <tr class="border-b hover:bg-gray-100 transition">
+
+            <!-- ID -->
+            <td class="py-3 px-4">
+              <?php echo safe($row['id_doctor']); ?>
+            </td>
+
+            <!-- Nama -->
+            <td class="py-3 px-4 font-semibold text-navytube">
+              <?php echo safe($row['name']); ?>
+            </td>
+
+            <!-- Spesialisasi -->
+            <td class="py-3 px-4 text-blue-700">
+              <?php echo safe($row['specialization']); ?>
+            </td>
+
+            <!-- Telepon -->
+            <td class="py-3 px-4">
+              <?php echo $row['phone'] ? safe($row['phone']) : "—"; ?>
+            </td>
+
+            <!-- STR -->
+            <td class="py-3 px-4">
+              <?php echo $row['license_no'] ? safe($row['license_no']) : "—"; ?>
+            </td>
+
+            <!-- Aksi -->
+            <td class="py-3 px-4 space-x-2">
+              <a href="doctor_edit.php?id=<?php echo $row['id_doctor']; ?>" 
+                 class="px-3 py-1 text-sm rounded border hover:bg-gray-200 transition">
+                Edit
+              </a>
+
+              <a href="doctor_delete.php?id=<?php echo $row['id_doctor']; ?>"
+                 onclick="return confirm('Yakin ingin menghapus data dokter ini?');"
+                 class="px-3 py-1 text-sm rounded border hover:bg-red-200 transition">
+                Hapus
+              </a>
+            </td>
+
+          </tr>
+        <?php endwhile; ?>
+
+      <?php else: ?>
         <tr>
-          <th class="py-2 px-4">ID</th>
-          <th class="py-2 px-4">Nama Dokter</th>
-          <th class="py-2 px-4">Spesialisasi</th>
-          <th class="py-2 px-4">Telepon</th>
-          <th class="py-2 px-4">Nomor STR</th>
-          <th class="py-2 px-4">Aksi</th>
+          <td colspan="6" class="py-4 text-center text-gray-500">Tidak ada data dokter.</td>
         </tr>
-      </thead>
-      <tbody class="bg-white">
-        <?php if ($result->num_rows > 0): ?>
-          <?php while ($row = $result->fetch_assoc()): ?>
-            <tr class="border-b hover:bg-skyblue transition">
-              <td class="py-2 px-4"><?php echo $row['id_doctor']; ?></td>
-              <td class="py-2 px-4 font-semibold text-navytube"><?php echo htmlspecialchars($row['name']); ?></td>
-              <td class="py-2 px-4 text-teal"><?php echo htmlspecialchars($row['specialization']); ?></td>
-              <td class="py-2 px-4"><?php echo htmlspecialchars($row['phone'] ?? '—'); ?></td>
-              <td class="py-2 px-4"><?php echo htmlspecialchars($row['license_no']); ?></td>
-              <td class="py-2 px-4 space-x-2">
-                <a href="doctor_edit.php?id=<?php echo $row['id_doctor']; ?>" class="btn btn-secondary">Edit</a>
-                <a href="doctor_delete.php?id=<?php echo $row['id_doctor']; ?>" 
-                   onclick="return confirm('Yakin ingin menghapus dokter ini?');" 
-                   class="btn btn-danger">Hapus</a>
-              </td>
-            </tr>
-          <?php endwhile; ?>
-        <?php else: ?>
-          <tr><td colspan="6" class="text-center py-4 text-gray-500">Tidak ada data dokter.</td></tr>
-        <?php endif; ?>
-      </tbody>
-    </table>
-  </div>
+      <?php endif; ?>
+    </tbody>
+
+  </table>
+</div>
 </main>
 
 <?php require_once(dirname(__DIR__, 2) . '/includes/footer.php'); ?>
