@@ -1,175 +1,65 @@
-# 🔥 FINAL PROJECT
+# Sistem Informasi Rumah Sakit (Kelompok 02)
 
-## Praktikum Pemrograman Web
+Aplikasi berbasis web untuk manajemen operasional rumah sakit yang mencakup modul Pasien, Dokter, dan Admin.
 
-### Laboratorium Teknik Komputer — Universitas Lampung
+## Anggota Kelompok
+* **Afif Rizki Putra** (2315061061)
+* **Puan Akeyla Maharani Munaji** (2315061070)
+* **Dara Ayu Rahmadilla** (2315061092)
+* **Nabila Putri Ayu Ningtyas** (2315061016)
 
-![Status](https://img.shields.io/badge/CI-Structure%20Check-blue)
-![PRs](https://img.shields.io/badge/PR-Welcome-green)
-![GitHub](https://img.shields.io/badge/GitHub-Repository-black)
+## Deskripsi Project
+Project ini adalah Sistem Informasi Rumah Sakit yang dibangun menggunakan PHP Native (tanpa framework) dan MySQL. Aplikasi ini bertujuan untuk mempermudah administrasi rumah sakit dalam mengelola data pasien, dokter, jadwal janji temu (appointments), dan rekam medis (medical records).
 
-Repositori ini digunakan sebagai **Tempat Pengumpulan Tugas Besar Praktikum Pemrograman Web**.  
-Setiap kelompok **WAJIB** mengikuti aturan, struktur folder, dan mekanisme CI yang berlaku.
+### Fitur Utama:
+1.  **Modul Admin**:
+    *   Dashboard statistik (Total pasien, dokter, antrian).
+    *   Manajemen User (CRUD Role: Admin, Dokter, Pasien).
+    *   Manajemen Dokter & Pasien.
+    *   Manajemen Appointment (Jadwal Janji Temu).
+    *   Melihat & Mencetak Riwayat Medis Pasien.
+2.  **Modul Dokter**:
+    *   Dashboard jadwal praktek hari ini.
+    *   Input rekam medis pasien (Diagnosis, Tindakan, Obat).
+    *   Melihat riwayat pasien.
+3.  **Modul Pasien**:
+    *   Booking appointment (Janji Temu).
+    *   Melihat riwayat kunjungan.
 
----
+## Cara Menjalankan Aplikasi
 
-## 📝 1. Mekanisme Pengumpulan
+### Prersyarat
+*   Web Server (Apache/Nginx) - Direkomendasikan menggunakan **Laragon** atau **XAMPP**.
+*   PHP Versi 7.4 atau lebih baru.
+*   MySQL Database.
 
-### **1. Fork Repository**
+### Instalasi
+1.  **Clone / Download Repository**
+    Simpan folder `kelompok_02` di dalam direktori root server lokal Anda (misalnya `www` di Laragon atau `htdocs` di XAMPP).
+    Path: `D:\LARAGON\laragon\www\kelompok\TUBES_PRK_PEMWEB_2025\kelompok\kelompok_02`
 
-Setiap ketua kelompok melakukan **fork** repository ini.
+2.  **Import Database**
+    *   Buka PHPMyAdmin atau Adminer.
+    *   Buat database baru dengan nama: `rumahsakit_db`.
+    *   Import file SQL yang terdapat di folder `database/rumahsakit_db.sql`.
 
-### **2. Buat Folder Kelompok**
+3.  **Konfigurasi Database**
+    Pastikan konfigurasi database di `config/db.php` sesuai dengan kredensial server lokal Anda:
+    ```php
+    define('DB_HOST', 'localhost');
+    define('DB_USER', 'root');
+    define('DB_PASS', ''); // Sesuaikan password jika ada
+    define('DB_NAME', 'rumahsakit_db');
+    ```
 
-Gunakan format:
+4.  **Menjalankan Aplikasi**
+    Buka browser dan akses:
+    `http://localhost/kelompok/TUBES_PRK_PEMWEB_2025/kelompok/kelompok_02/auth/login.php`
 
-```bash
-kelompok/kelompok_XX/
-```
+### Akun Demo (Default)
+Apabila data dummy sudah di-generate:
+*   **Admin**: admin / password (atau cek di tabel `users`)
+*   **Dokter**: dokter / password
+*   **Pasien**: user / password
 
-Contoh:
-
-```bash
-kelompok/kelompok_04/
-```
-
-### **3. Struktur Wajib di Dalam Folder Kelompok**
-
-```bash
-kelompok_04/
-└── README.md # Dokumentasi + anggota kelompok
-```
-
-> **README.md wajib berisi:**
->
-> - Daftar anggota
-> - Judul & summary project
-> - Cara menjalankan aplikasi
-
-### **4. Push Perubahan ke Repo Fork**
-
-### **5. Buat Pull Request**
-
-Format judul PR:
-
-```
-
-[Kelompok-04] Nama Proyek
-
-```
-
-### **6. PR Akan Dicek Oleh CI**
-
-CI memverifikasi:
-
-- Struktur folder sesuai format
-- Hanya mengubah folder kelompok sendiri
-- File wajib tersedia
-- README tidak kosong
-- Tidak menyentuh folder/berkas milik kelompok lain
-
-Jika salah → **CI otomatis gagal & memberikan komentar.**
-
----
-
-## 🎯 2. Tema Final Project (pilih satu)
-
-| No  | Tema                                    | Deskripsi Singkat                        |
-| --- | --------------------------------------- | ---------------------------------------- |
-| 1   | **Good Governance**                     | Layanan publik, perizinan, sosial, pajak |
-| 2   | **Innovation in Health**                | Telemedicine, rekam medis, jadwal dokter |
-| 3   | **Innovation in Education**             | E-learning, aplikasi edukasi             |
-| 4   | **Digital Transformation for SMEs**     | POS, marketplace, inventori              |
-| 5   | **Community & Organization Management** | Sistem komunitas, voting, donasi         |
-| 6   | **Smart City & Environment**            | Pelaporan infrastruktur, lingkungan      |
-
----
-
-## ⚙️ 3. Ketentuan Umum
-
-### **Persyaratan Teknis**
-
-- **Frontend:**
-  HTML5, CSS3 (Native/Tailwind/Bootstrap), JavaScript Native
-  _Tidak boleh memakai framework JS (React/Vue/Angular)._
-
-- **Backend:** PHP Native
-- **Database:** MySQL
-
-  - Wajib menyediakan ERD & SQL schema
-
-- **Version Control:** Git & GitHub
-
----
-
-## 🚀 4. Fitur Wajib
-
-### **1. User Management**
-
-- Login
-- Logout
-- Registrasi
-- Role / hak akses
-
-### **2. Fitur Transaksi/Layanan**
-
-Contoh:
-
-- CRUD data
-- Proses transaksi
-- Validasi data
-- Pelaporan
-
----
-
-## 📦 5. Deliverables
-
-Setiap kelompok wajib mengumpulkan:
-
-- Source code lengkap pada folder `src/`
-- File SQL database
-- ERD (PNG/JPG/PDF)
-- Screenshot aplikasi
-- README.md dalam folder kelompok:
-  - Instalasi & cara menjalankan
-  - Dokumentasi singkat
-- Presentasi & demo (opsional)
-
----
-
-## 📁 6. Struktur Repo
-
-```bash
-TUBES_PRK_PEMWEB_2025/
-│
-├── README.md
-├── .github/
-│ └── workflows/
-│ └── format-check.yml
-│
-└── kelompok/
-      └── kelompok_01/
-```
-
----
-
-## ⚠️ 7. Aturan Tambahan
-
-- Dilarang mengubah folder kelompok lain
-- Dilarang membuat folder di luar `kelompok/`
-- Nama folder tidak boleh diganti setelah dibuat
-- PR dengan struktur salah akan ditolak CI
-
----
-
-## 📞 8. Kontak Resmi
-
-Silakan hubungi Asisten Praktikum jika ada kendala teknis terkait CI atau mekanisme pengumpulan.
-
----
-
-### 🎉 Selamat mengerjakan!
-
-Gunakan Git dengan baik, commit secara bertahap, dan kerjakan proyek dengan rapi.
-
-> Laboratorium Teknik Komputer — Universitas Lampung
+*Catatan: Pastikan untuk menjalankan perintah `git pull` terbaru untuk mendapatkan pembaruan terakhir.*
