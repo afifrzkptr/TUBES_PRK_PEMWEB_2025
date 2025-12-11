@@ -200,9 +200,11 @@ include 'includes/header.php';
                             </span>
                         </td>
                         <td>
-                            <button class="btn btn-sm btn-warning" onclick='editAppointment(<?= json_encode($appointment) ?>)'>Edit</button>
-                            <a href="?delete=<?= $appointment['id_appointment'] ?>" class="btn btn-sm btn-danger" 
-                               onclick="return confirm('Yakin ingin menghapus appointment ini?')">Hapus</a>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-sm btn-warning" onclick='editAppointment(<?= json_encode($appointment) ?>)'>Edit</button>
+                                <a href="?delete=<?= $appointment['id_appointment'] ?>" class="btn btn-sm btn-danger" 
+                                   onclick="return confirm('Yakin ingin menghapus appointment ini?')">Hapus</a>
+                            </div>
                         </td>
                     </tr>
                     <?php endforeach; ?>

@@ -5,103 +5,42 @@ require_once '../config/config.lokal.php';
 $conn = connect_db();
 
 $current_page = 'medical_records';
-$page_title = 'Riwayat Medis';
+$page_title = 'Riwayat Medis Pasien';
 
-// Handle Delete
-if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
-    $id = (int)$_GET['delete'];
-    $stmt = $conn->prepare("DELETE FROM medical_records WHERE id_record = ?");
-    $stmt->bind_param("i", $id);
-    if ($stmt->execute()) {
-        $_SESSION['success'] = "Riwayat medis berhasil dihapus";
-    } else {
-        $_SESSION['error'] = "Gagal menghapus riwayat medis";
-    }
-    header("Location: medical_records.php");
-    exit;
-}
+// Get patients with their medical records count (only show patients with medical records)
+$query = "SELECT 
+          p.id_patient,
+          p.name,
+          p.med_record_no,
+          p.birth_date,
+          p.phone,
+          COUNT(mr.id_record) as total_records,
+          MAX(a.date) as last_visit
+          FROM patients p
+          INNER JOIN appointments a ON p.id_patient = a.id_patient
+          INNER JOIN medical_records mr ON a.id_appointment = mr.id_appointment
+          GROUP BY p.id_patient, p.name, p.med_record_no, p.birth_date, p.phone
+          HAVING COUNT(mr.id_record) > 0
+          ORDER BY MAX(a.date) DESC";
 
-// Handle Add/Edit
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id_record = isset($_POST['id_record']) ? (int)$_POST['id_record'] : 0;
-    $id_appointment = (int)$_POST['id_appointment'];
-    $diagnosis = trim($_POST['diagnosis']);
-    $treatment = trim($_POST['treatment']);
-    $notes = trim($_POST['notes']);
-    
-    if ($id_record > 0) {
-        // Update
-        $stmt = $conn->prepare("UPDATE medical_records SET id_appointment=?, diagnosis=?, treatment=?, notes=? WHERE id_record=?");
-        $stmt->bind_param("isssi", $id_appointment, $diagnosis, $treatment, $notes, $id_record);
-    } else {
-        // Insert
-        $stmt = $conn->prepare("INSERT INTO medical_records (id_appointment, diagnosis, treatment, notes) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("isss", $id_appointment, $diagnosis, $treatment, $notes);
-    }
-    
-    if ($stmt->execute()) {
-        $_SESSION['success'] = $id_record > 0 ? "Riwayat medis berhasil diupdate" : "Riwayat medis berhasil ditambahkan";
-    } else {
-        $_SESSION['error'] = "Gagal menyimpan riwayat medis: " . $conn->error;
-    }
-    header("Location: medical_records.php");
-    exit;
-}
-
-// Get all appointments with status Done
-$appointments = [];
-$result = $conn->query("SELECT a.id_appointment, a.date, a.time, a.queue_number,
-                        p.name as patient_name, p.med_record_no,
-                        d.name as doctor_name, d.specialization
-                        FROM appointments a 
-                        INNER JOIN patients p ON a.id_patient = p.id_patient
-                        INNER JOIN doctors d ON a.id_doctor = d.id_doctor
-                        WHERE a.status = 'Done'
-                        ORDER BY a.date DESC");
-if ($result) {
-    while ($row = $result->fetch_assoc()) {
-        $appointments[] = $row;
-    }
-}
-
-// Get all medical records
-$query = "SELECT mr.*, 
-          a.date, a.time, a.queue_number,
-          p.name as patient_name, p.med_record_no,
-          d.name as doctor_name, d.specialization
-          FROM medical_records mr 
-          INNER JOIN appointments a ON mr.id_appointment = a.id_appointment
-          INNER JOIN patients p ON a.id_patient = p.id_patient
-          INNER JOIN doctors d ON a.id_doctor = d.id_doctor
-          ORDER BY mr.id_record ASC";
 $result = $conn->query($query);
-$medical_records = [];
+$patients = [];
 if ($result) {
     while ($row = $result->fetch_assoc()) {
-        $medical_records[] = $row;
+        $patients[] = $row;
     }
 } else {
-    $_SESSION['error'] = "Error loading medical records: " . $conn->error;
-}
-
-// Get edit medical record if exists
-$edit_record = null;
-if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
-    $id = (int)$_GET['edit'];
-    $stmt = $conn->prepare("SELECT * FROM medical_records WHERE id_record = ?");
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-    $edit_record = $stmt->get_result()->fetch_assoc();
+    $_SESSION['error'] = "Error loading patients: " . $conn->error;
 }
 
 include 'includes/header.php';
 ?>
 
+<!-- Load Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+
 <div class="page-header">
     <h1><?= htmlspecialchars($page_title) ?></h1>
-    <button class="btn btn-primary" onclick="openModal()">
-        <i class="icon">+</i> Tambah Riwayat Medis
-    </button>
 </div>
 
 <?php if (isset($_SESSION['success'])): ?>
@@ -120,7 +59,7 @@ include 'includes/header.php';
 
 <div class="card">
     <div class="card-header">
-        <h3>Daftar Riwayat Medis</h3>
+        <h3>Daftar Pasien</h3>
     </div>
     <div class="card-body">
         <!-- Search Form -->
@@ -130,7 +69,7 @@ include 'includes/header.php';
                     <input type="text" 
                            id="searchInput"
                            class="form-control" 
-                           placeholder="Cari berdasarkan pasien, dokter, atau diagnosis..." 
+                           placeholder="Cari pasien berdasarkan nama atau no. rekam medis..." 
                            style="padding-left: 35px;"
                            autocomplete="off">
                     <svg style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px;" 
@@ -139,46 +78,48 @@ include 'includes/header.php';
                         <path d="m21 21-4.35-4.35"></path>
                     </svg>
                 </div>
-                <span id="resultCount" style="color: #666; font-size: 14px; min-width: 130px;"></span>
+                <span id="resultCount" style="color: #666; font-size: 14px; min-width: 120px;"></span>
             </div>
         </div>
         
         <div class="table-responsive">
-            <table class="data-table" id="medicalRecordsTable">
+            <table class="data-table" id="patientsTable">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Tanggal</th>
-                        <th>Pasien</th>
-                        <th>Dokter</th>
-                        <th>Diagnosis</th>
-                        <th>Treatment</th>
+                        <th>No. Rekam Medis</th>
+                        <th>Nama Pasien</th>
+                        <th>Tanggal Lahir</th>
+                        <th>Phone</th>
+                        <th>Total Kunjungan</th>
+                        <th>Kunjungan Terakhir</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
-                <tbody id="recordTableBody">
-                    <?php foreach ($medical_records as $record): ?>
-                    <tr class="record-row" 
-                        data-patient="<?= strtolower(htmlspecialchars($record['patient_name'])) ?>"
-                        data-doctor="<?= strtolower(htmlspecialchars($record['doctor_name'])) ?>"
-                        data-diagnosis="<?= strtolower(htmlspecialchars($record['diagnosis'])) ?>">
-                        <td><?= htmlspecialchars($record['id_record']) ?></td>
-                        <td><?= date('d/m/Y', strtotime($record['date'])) ?></td>
+                <tbody id="patientTableBody">
+                    <?php foreach ($patients as $patient): ?>
+                    <tr class="patient-row" 
+                        data-name="<?= strtolower(htmlspecialchars($patient['name'])) ?>"
+                        data-medrecord="<?= strtolower(htmlspecialchars($patient['med_record_no'])) ?>">
+                        <td><strong><?= htmlspecialchars($patient['med_record_no']) ?></strong></td>
+                        <td><?= htmlspecialchars($patient['name']) ?></td>
+                        <td><?= $patient['birth_date'] ? date('d/m/Y', strtotime($patient['birth_date'])) : '-' ?></td>
+                        <td><?= htmlspecialchars($patient['phone'] ?: '-') ?></td>
                         <td>
-                            <?= htmlspecialchars($record['patient_name']) ?><br>
-                            <small class="text-muted"><?= htmlspecialchars($record['med_record_no']) ?></small>
+                            <span class="badge badge-<?= $patient['total_records'] > 0 ? 'info' : 'secondary' ?>">
+                                <?= $patient['total_records'] ?> kunjungan
+                            </span>
                         </td>
+                        <td><?= $patient['last_visit'] ? date('d/m/Y', strtotime($patient['last_visit'])) : '-' ?></td>
                         <td>
-                            <?= htmlspecialchars($record['doctor_name']) ?><br>
-                            <small class="text-muted"><?= htmlspecialchars($record['specialization']) ?></small>
-                        </td>
-                        <td><?= htmlspecialchars(substr($record['diagnosis'], 0, 50)) ?>...</td>
-                        <td><?= htmlspecialchars(substr($record['treatment'], 0, 50)) ?>...</td>
-                        <td>
-                            <button class="btn btn-sm btn-info" onclick='viewRecord(<?= json_encode($record) ?>)'>Lihat</button>
-                            <button class="btn btn-sm btn-warning" onclick='editRecord(<?= json_encode($record) ?>)'>Edit</button>
-                            <a href="?delete=<?= $record['id_record'] ?>" class="btn btn-sm btn-danger" 
-                               onclick="return confirm('Yakin ingin menghapus riwayat medis ini?')">Hapus</a>
+                            <?php if ($patient['total_records'] > 0): ?>
+                                <a href="patient_medical_history.php?id=<?= $patient['id_patient'] ?>" 
+                                   class="btn btn-sm btn-primary" style="display: inline-flex; align-items: center; gap: 6px;">
+                                   <i data-lucide="clipboard-list" style="width: 14px; height: 14px;"></i>
+                                   Lihat Riwayat
+                                </a>
+                            <?php else: ?>
+                                <span class="text-muted">Belum ada riwayat</span>
+                            <?php endif; ?>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -188,128 +129,26 @@ include 'includes/header.php';
     </div>
 </div>
 
-<!-- Modal Form -->
-<div id="recordModal" class="modal">
-    <div class="modal-content modal-large">
-        <div class="modal-header">
-            <h3 id="modalTitle">Tambah Riwayat Medis</h3>
-            <span class="modal-close" onclick="closeModal()">&times;</span>
-        </div>
-        <form method="POST" action="" id="medicalRecordForm">
-            <div class="modal-body">
-                <input type="hidden" name="id_record" id="id_record">
-                
-                <div class="form-group">
-                    <label>Appointment (Done) *</label>
-                    <select name="id_appointment" id="id_appointment" class="form-control" required>
-                        <option value="">-- Pilih Appointment --</option>
-                        <?php foreach ($appointments as $appointment): ?>
-                        <option value="<?= $appointment['id_appointment'] ?>">
-                            <?= date('d/m/Y', strtotime($appointment['date'])) ?> - 
-                            <?= htmlspecialchars($appointment['patient_name']) ?> 
-                            (Q: <?= $appointment['queue_number'] ?>) - 
-                            <?= htmlspecialchars($appointment['doctor_name']) ?>
-                        </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Diagnosis *</label>
-                    <textarea name="diagnosis" id="diagnosis" class="form-control" rows="4" required 
-                              placeholder="Hasil diagnosis..."></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label>Treatment</label>
-                    <textarea name="treatment" id="treatment" class="form-control" rows="4" 
-                              placeholder="Tindakan yang dilakukan..."></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label>Catatan</label>
-                    <textarea name="notes" id="notes" class="form-control" rows="3" 
-                              placeholder="Catatan tambahan..."></textarea>
-                </div>
-            </div>
-            
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
-                <button type="submit" class="btn btn-primary">Simpan</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Modal View -->
-<div id="viewModal" class="modal">
-    <div class="modal-content modal-large">
-        <div class="modal-header">
-            <h3>Detail Riwayat Medis</h3>
-            <span class="modal-close" onclick="closeViewModal()">&times;</span>
-        </div>
-        <div class="modal-body">
-            <div class="record-detail">
-                <div class="detail-row">
-                    <strong>Tanggal:</strong> 
-                    <span id="view_date"></span>
-                </div>
-                <div class="detail-row">
-                    <strong>Pasien:</strong> 
-                    <span id="view_patient"></span>
-                </div>
-                <div class="detail-row">
-                    <strong>Dokter:</strong> 
-                    <span id="view_doctor"></span>
-                </div>
-                <hr>
-                <div class="detail-row">
-                    <strong>Diagnosis:</strong> 
-                    <p id="view_diagnosis"></p>
-                </div>
-                <div class="detail-row">
-                    <strong>Treatment:</strong> 
-                    <p id="view_treatment"></p>
-                </div>
-                <div class="detail-row">
-                    <strong>Catatan:</strong> 
-                    <p id="view_notes"></p>
-                </div>
-                <div class="detail-row">
-                    <strong>Dibuat:</strong> 
-                    <span id="view_created_at"></span>
-                </div>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeViewModal()">Tutup</button>
-        </div>
-    </div>
-</div>
-
 <script>
 // Live Search Functionality
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
-    const recordRows = document.querySelectorAll('.record-row');
+    const patientRows = document.querySelectorAll('.patient-row');
     const resultCount = document.getElementById('resultCount');
-    const totalRecords = recordRows.length;
+    const totalPatients = patientRows.length;
     
     // Update count on load
-    updateResultCount(totalRecords, totalRecords);
+    updateResultCount(totalPatients, totalPatients);
     
     searchInput.addEventListener('input', function() {
         const searchTerm = this.value.toLowerCase().trim();
         let visibleCount = 0;
         
-        recordRows.forEach(function(row) {
-            const patient = row.getAttribute('data-patient');
-            const doctor = row.getAttribute('data-doctor');
-            const diagnosis = row.getAttribute('data-diagnosis');
+        patientRows.forEach(function(row) {
+            const name = row.getAttribute('data-name');
+            const medRecord = row.getAttribute('data-medrecord');
             
-            if (patient.includes(searchTerm) || 
-                doctor.includes(searchTerm) || 
-                diagnosis.includes(searchTerm)) {
+            if (name.includes(searchTerm) || medRecord.includes(searchTerm)) {
                 row.style.display = '';
                 visibleCount++;
             } else {
@@ -317,22 +156,20 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        updateResultCount(visibleCount, totalRecords);
-        
-        // Show/hide "no results" message
+        updateResultCount(visibleCount, totalPatients);
         showNoResults(visibleCount === 0, searchTerm);
     });
     
     function updateResultCount(visible, total) {
         if (visible === total) {
-            resultCount.textContent = `${total} riwayat medis`;
+            resultCount.textContent = `${total} pasien`;
         } else {
-            resultCount.textContent = `${visible} dari ${total} riwayat medis`;
+            resultCount.textContent = `${visible} dari ${total} pasien`;
         }
     }
     
     function showNoResults(show, searchTerm) {
-        const tableBody = document.getElementById('recordTableBody');
+        const tableBody = document.getElementById('patientTableBody');
         let noResultRow = document.getElementById('noResultRow');
         
         if (show) {
@@ -354,60 +191,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-function openModal() {
-    document.getElementById('modalTitle').textContent = 'Tambah Riwayat Medis';
-    document.getElementById('id_record').value = '';
-    document.getElementById('id_appointment').value = '';
-    document.getElementById('diagnosis').value = '';
-    document.getElementById('treatment').value = '';
-    document.getElementById('notes').value = '';
-    document.getElementById('recordModal').style.display = 'block';
-}
-
-function editRecord(record) {
-    document.getElementById('modalTitle').textContent = 'Edit Riwayat Medis';
-    document.getElementById('id_record').value = record.id_record;
-    document.getElementById('id_appointment').value = record.id_appointment;
-    document.getElementById('diagnosis').value = record.diagnosis;
-    document.getElementById('treatment').value = record.treatment || '';
-    document.getElementById('notes').value = record.notes || '';
-    document.getElementById('recordModal').style.display = 'block';
-}
-
-function viewRecord(record) {
-    const formatDate = (dateStr) => {
-        const date = new Date(dateStr);
-        return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
-    };
-    
-    document.getElementById('view_date').textContent = formatDate(record.date) + ' ' + record.time.substring(0, 5);
-    document.getElementById('view_patient').textContent = record.patient_name + ' (' + record.med_record_no + ')';
-    document.getElementById('view_doctor').textContent = record.doctor_name + ' - ' + record.specialization;
-    document.getElementById('view_diagnosis').textContent = record.diagnosis;
-    document.getElementById('view_treatment').textContent = record.treatment || '-';
-    document.getElementById('view_notes').textContent = record.notes || '-';
-    document.getElementById('view_created_at').textContent = formatDate(record.created_at);
-    document.getElementById('viewModal').style.display = 'block';
-}
-
-function closeModal() {
-    document.getElementById('recordModal').style.display = 'none';
-}
-
-function closeViewModal() {
-    document.getElementById('viewModal').style.display = 'none';
-}
-
-window.onclick = function(event) {
-    const recordModal = document.getElementById('recordModal');
-    const viewModal = document.getElementById('viewModal');
-    if (event.target === recordModal) {
-        closeModal();
-    }
-    if (event.target === viewModal) {
-        closeViewModal();
-    }
-}
+// Initialize Lucide Icons
+lucide.createIcons();
 </script>
 
 <?php include 'includes/footer.php'; ?>
