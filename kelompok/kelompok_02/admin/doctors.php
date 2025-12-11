@@ -115,8 +115,28 @@ include 'includes/header.php';
         <h3>Daftar Dokter</h3>
     </div>
     <div class="card-body">
+        <!-- Search Form -->
+        <div class="search-container" style="margin-bottom: 20px;">
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div style="position: relative; flex: 1; max-width: 400px;">
+                    <input type="text" 
+                           id="searchInput"
+                           class="form-control" 
+                           placeholder="Cari berdasarkan nama, spesialisasi, atau phone..." 
+                           style="padding-left: 35px;"
+                           autocomplete="off">
+                    <svg style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px;" 
+                         viewBox="0 0 24 24" fill="none" stroke="#2f4156" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                </div>
+                <span id="resultCount" style="color: #666; font-size: 14px; min-width: 120px;"></span>
+            </div>
+        </div>
+        
         <div class="table-responsive">
-            <table class="data-table">
+            <table class="data-table" id="doctorsTable">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -128,9 +148,12 @@ include 'includes/header.php';
                         <th>Aksi</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="doctorTableBody">
                     <?php foreach ($doctors as $doctor): ?>
-                    <tr>
+                    <tr class="doctor-row" 
+                        data-name="<?= strtolower(htmlspecialchars($doctor['name'])) ?>"
+                        data-specialization="<?= strtolower(htmlspecialchars($doctor['specialization'])) ?>"
+                        data-phone="<?= strtolower(htmlspecialchars($doctor['phone'])) ?>">
                         <td><?= htmlspecialchars($doctor['id_doctor']) ?></td>
                         <td><strong><?= htmlspecialchars($doctor['name']) ?></strong></td>
                         <td>
@@ -212,6 +235,72 @@ include 'includes/header.php';
 </div>
 
 <script>
+// Live Search Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const doctorRows = document.querySelectorAll('.doctor-row');
+    const resultCount = document.getElementById('resultCount');
+    const totalDoctors = doctorRows.length;
+    
+    // Update count on load
+    updateResultCount(totalDoctors, totalDoctors);
+    
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        let visibleCount = 0;
+        
+        doctorRows.forEach(function(row) {
+            const name = row.getAttribute('data-name');
+            const specialization = row.getAttribute('data-specialization');
+            const phone = row.getAttribute('data-phone');
+            
+            if (name.includes(searchTerm) || 
+                specialization.includes(searchTerm) || 
+                phone.includes(searchTerm)) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        updateResultCount(visibleCount, totalDoctors);
+        
+        // Show/hide "no results" message
+        showNoResults(visibleCount === 0, searchTerm);
+    });
+    
+    function updateResultCount(visible, total) {
+        if (visible === total) {
+            resultCount.textContent = `${total} dokter`;
+        } else {
+            resultCount.textContent = `${visible} dari ${total} dokter`;
+        }
+    }
+    
+    function showNoResults(show, searchTerm) {
+        const tableBody = document.getElementById('doctorTableBody');
+        let noResultRow = document.getElementById('noResultRow');
+        
+        if (show) {
+            if (!noResultRow) {
+                noResultRow = document.createElement('tr');
+                noResultRow.id = 'noResultRow';
+                noResultRow.innerHTML = `
+                    <td colspan="7" style="text-align: center; padding: 20px; color: #999;">
+                        Tidak ada hasil yang ditemukan untuk "<strong>${searchTerm}</strong>"
+                    </td>
+                `;
+                tableBody.appendChild(noResultRow);
+            }
+        } else {
+            if (noResultRow) {
+                noResultRow.remove();
+            }
+        }
+    }
+});
+
 function openModal() {
     document.getElementById('modalTitle').textContent = 'Tambah Dokter';
     document.getElementById('id_doctor').value = '';

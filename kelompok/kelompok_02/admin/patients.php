@@ -116,8 +116,28 @@ include 'includes/header.php';
         <h3>Daftar Pasien</h3>
     </div>
     <div class="card-body">
+        <!-- Search Form -->
+        <div class="search-container" style="margin-bottom: 20px;">
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div style="position: relative; flex: 1; max-width: 400px;">
+                    <input type="text" 
+                           id="searchInput"
+                           class="form-control" 
+                           placeholder="Cari berdasarkan nama, no. rekam medis, atau phone..." 
+                           style="padding-left: 35px;"
+                           autocomplete="off">
+                    <svg style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px;" 
+                         viewBox="0 0 24 24" fill="none" stroke="#2f4156" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                </div>
+                <span id="resultCount" style="color: #666; font-size: 14px; min-width: 120px;"></span>
+            </div>
+        </div>
+        
         <div class="table-responsive">
-            <table class="data-table">
+            <table class="data-table" id="patientsTable">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -129,9 +149,12 @@ include 'includes/header.php';
                         <th>Aksi</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="patientTableBody">
                     <?php foreach ($patients as $patient): ?>
-                    <tr>
+                    <tr class="patient-row" 
+                        data-name="<?= strtolower(htmlspecialchars($patient['name'])) ?>"
+                        data-medrecord="<?= strtolower(htmlspecialchars($patient['med_record_no'])) ?>"
+                        data-phone="<?= strtolower(htmlspecialchars($patient['phone'])) ?>">
                         <td><?= htmlspecialchars($patient['id_patient']) ?></td>
                         <td><strong><?= htmlspecialchars($patient['med_record_no']) ?></strong></td>
                         <td><?= htmlspecialchars($patient['name']) ?></td>
@@ -216,6 +239,72 @@ include 'includes/header.php';
 </div>
 
 <script>
+// Live Search Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const patientRows = document.querySelectorAll('.patient-row');
+    const resultCount = document.getElementById('resultCount');
+    const totalPatients = patientRows.length;
+    
+    // Update count on load
+    updateResultCount(totalPatients, totalPatients);
+    
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        let visibleCount = 0;
+        
+        patientRows.forEach(function(row) {
+            const name = row.getAttribute('data-name');
+            const medRecord = row.getAttribute('data-medrecord');
+            const phone = row.getAttribute('data-phone');
+            
+            if (name.includes(searchTerm) || 
+                medRecord.includes(searchTerm) || 
+                phone.includes(searchTerm)) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        updateResultCount(visibleCount, totalPatients);
+        
+        // Show/hide "no results" message
+        showNoResults(visibleCount === 0, searchTerm);
+    });
+    
+    function updateResultCount(visible, total) {
+        if (visible === total) {
+            resultCount.textContent = `${total} pasien`;
+        } else {
+            resultCount.textContent = `${visible} dari ${total} pasien`;
+        }
+    }
+    
+    function showNoResults(show, searchTerm) {
+        const tableBody = document.getElementById('patientTableBody');
+        let noResultRow = document.getElementById('noResultRow');
+        
+        if (show) {
+            if (!noResultRow) {
+                noResultRow = document.createElement('tr');
+                noResultRow.id = 'noResultRow';
+                noResultRow.innerHTML = `
+                    <td colspan="7" style="text-align: center; padding: 20px; color: #999;">
+                        Tidak ada hasil yang ditemukan untuk "<strong>${searchTerm}</strong>"
+                    </td>
+                `;
+                tableBody.appendChild(noResultRow);
+            }
+        } else {
+            if (noResultRow) {
+                noResultRow.remove();
+            }
+        }
+    }
+});
+
 function openModal() {
     document.getElementById('modalTitle').textContent = 'Tambah Pasien';
     document.getElementById('id_patient').value = '';

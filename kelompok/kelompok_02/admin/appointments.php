@@ -125,8 +125,28 @@ include 'includes/header.php';
         <h3>Daftar Appointments</h3>
     </div>
     <div class="card-body">
+        <!-- Search Form -->
+        <div class="search-container" style="margin-bottom: 20px;">
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div style="position: relative; flex: 1; max-width: 400px;">
+                    <input type="text" 
+                           id="searchInput"
+                           class="form-control" 
+                           placeholder="Cari berdasarkan pasien, dokter, atau status..." 
+                           style="padding-left: 35px;"
+                           autocomplete="off">
+                    <svg style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px;" 
+                         viewBox="0 0 24 24" fill="none" stroke="#2f4156" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                </div>
+                <span id="resultCount" style="color: #666; font-size: 14px; min-width: 130px;"></span>
+            </div>
+        </div>
+        
         <div class="table-responsive">
-            <table class="data-table">
+            <table class="data-table" id="appointmentsTable">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -139,9 +159,12 @@ include 'includes/header.php';
                         <th>Aksi</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="appointmentTableBody">
                     <?php foreach ($appointments as $appointment): ?>
-                    <tr>
+                    <tr class="appointment-row" 
+                        data-patient="<?= strtolower(htmlspecialchars($appointment['patient_name'])) ?>"
+                        data-doctor="<?= strtolower(htmlspecialchars($appointment['doctor_name'])) ?>"
+                        data-status="<?= strtolower(htmlspecialchars($appointment['status'])) ?>">
                         <td><?= htmlspecialchars($appointment['id_appointment']) ?></td>
                         <td><strong><?= htmlspecialchars($appointment['queue_number']) ?></strong></td>
                         <td><?= date('d/m/Y', strtotime($appointment['date'])) ?></td>
@@ -261,6 +284,72 @@ include 'includes/header.php';
 </div>
 
 <script>
+// Live Search Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const appointmentRows = document.querySelectorAll('.appointment-row');
+    const resultCount = document.getElementById('resultCount');
+    const totalAppointments = appointmentRows.length;
+    
+    // Update count on load
+    updateResultCount(totalAppointments, totalAppointments);
+    
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        let visibleCount = 0;
+        
+        appointmentRows.forEach(function(row) {
+            const patient = row.getAttribute('data-patient');
+            const doctor = row.getAttribute('data-doctor');
+            const status = row.getAttribute('data-status');
+            
+            if (patient.includes(searchTerm) || 
+                doctor.includes(searchTerm) || 
+                status.includes(searchTerm)) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        updateResultCount(visibleCount, totalAppointments);
+        
+        // Show/hide "no results" message
+        showNoResults(visibleCount === 0, searchTerm);
+    });
+    
+    function updateResultCount(visible, total) {
+        if (visible === total) {
+            resultCount.textContent = `${total} appointments`;
+        } else {
+            resultCount.textContent = `${visible} dari ${total} appointments`;
+        }
+    }
+    
+    function showNoResults(show, searchTerm) {
+        const tableBody = document.getElementById('appointmentTableBody');
+        let noResultRow = document.getElementById('noResultRow');
+        
+        if (show) {
+            if (!noResultRow) {
+                noResultRow = document.createElement('tr');
+                noResultRow.id = 'noResultRow';
+                noResultRow.innerHTML = `
+                    <td colspan="8" style="text-align: center; padding: 20px; color: #999;">
+                        Tidak ada hasil yang ditemukan untuk "<strong>${searchTerm}</strong>"
+                    </td>
+                `;
+                tableBody.appendChild(noResultRow);
+            }
+        } else {
+            if (noResultRow) {
+                noResultRow.remove();
+            }
+        }
+    }
+});
+
 function openModal() {
     document.getElementById('modalTitle').textContent = 'Tambah Appointment';
     document.getElementById('id_appointment').value = '';

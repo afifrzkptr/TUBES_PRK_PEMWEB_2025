@@ -119,8 +119,28 @@ include 'includes/header.php';
         <h3>Daftar Users</h3>
     </div>
     <div class="card-body">
+        <!-- Search Form -->
+        <div class="search-container" style="margin-bottom: 20px;">
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div style="position: relative; flex: 1; max-width: 400px;">
+                    <input type="text" 
+                           id="searchInput"
+                           class="form-control" 
+                           placeholder="Cari berdasarkan username, email, atau role..." 
+                           style="padding-left: 35px;"
+                           autocomplete="off">
+                    <svg style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px;" 
+                         viewBox="0 0 24 24" fill="none" stroke="#2f4156" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                </div>
+                <span id="resultCount" style="color: #666; font-size: 14px; min-width: 120px;"></span>
+            </div>
+        </div>
+        
         <div class="table-responsive">
-            <table class="data-table">
+            <table class="data-table" id="usersTable">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -131,9 +151,12 @@ include 'includes/header.php';
                         <th>Aksi</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="userTableBody">
                     <?php foreach ($users as $user): ?>
-                    <tr>
+                    <tr class="user-row" 
+                        data-username="<?= strtolower(htmlspecialchars($user['username'])) ?>"
+                        data-email="<?= strtolower(htmlspecialchars($user['email'])) ?>"
+                        data-role="<?= strtolower(htmlspecialchars($user['role_name'])) ?>">
                         <td><?= htmlspecialchars($user['id_user']) ?></td>
                         <td><?= htmlspecialchars($user['username']) ?></td>
                         <td><?= htmlspecialchars($user['email']) ?></td>
@@ -213,6 +236,72 @@ include 'includes/header.php';
 </div>
 
 <script>
+// Live Search Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const userRows = document.querySelectorAll('.user-row');
+    const resultCount = document.getElementById('resultCount');
+    const totalUsers = userRows.length;
+    
+    // Update count on load
+    updateResultCount(totalUsers, totalUsers);
+    
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        let visibleCount = 0;
+        
+        userRows.forEach(function(row) {
+            const username = row.getAttribute('data-username');
+            const email = row.getAttribute('data-email');
+            const role = row.getAttribute('data-role');
+            
+            if (username.includes(searchTerm) || 
+                email.includes(searchTerm) || 
+                role.includes(searchTerm)) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        updateResultCount(visibleCount, totalUsers);
+        
+        // Show/hide "no results" message
+        showNoResults(visibleCount === 0, searchTerm);
+    });
+    
+    function updateResultCount(visible, total) {
+        if (visible === total) {
+            resultCount.textContent = `${total} users`;
+        } else {
+            resultCount.textContent = `${visible} dari ${total} users`;
+        }
+    }
+    
+    function showNoResults(show, searchTerm) {
+        const tableBody = document.getElementById('userTableBody');
+        let noResultRow = document.getElementById('noResultRow');
+        
+        if (show) {
+            if (!noResultRow) {
+                noResultRow = document.createElement('tr');
+                noResultRow.id = 'noResultRow';
+                noResultRow.innerHTML = `
+                    <td colspan="6" style="text-align: center; padding: 20px; color: #999;">
+                        Tidak ada hasil yang ditemukan untuk "<strong>${searchTerm}</strong>"
+                    </td>
+                `;
+                tableBody.appendChild(noResultRow);
+            }
+        } else {
+            if (noResultRow) {
+                noResultRow.remove();
+            }
+        }
+    }
+});
+
 function openModal() {
     document.getElementById('modalTitle').textContent = 'Tambah User';
     document.getElementById('id_user').value = '';
