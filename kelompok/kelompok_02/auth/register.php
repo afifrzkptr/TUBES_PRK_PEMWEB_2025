@@ -271,7 +271,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div class="copyright">
-                <p>&copy; 2025 Sistem Informasi RS DB | Tugas Akhir Praktikum Pemrograman Web</p>
+                <p>&copy; 2025 Sistem Informasi Rumah Sakit | Tugas Akhir Praktikum Pemrograman Web</p>
                 <p>Kelompok 02 - Afif, Akeyla, Dara, Nabila Putri</p>
             </div>
         </div>

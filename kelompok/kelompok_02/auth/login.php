@@ -55,10 +55,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         header('Location: ../admin/dashboard.php');
                         break;
                     case 'Dokter':
-                        header('Location: login_success.php'); // Ganti dengan ../doctor/dashboard.php nanti
+                        header('Location: ../doctor/dashboard.php');
                         break;
                     case 'Pasien':
-                        header('Location: login_success.php'); // Ganti dengan ../patient/dashboard.php nanti
+                        header('Location: ../patient/dashboard.php');
                         break;
                     default:
                         header('Location: login_success.php');
@@ -183,7 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <span class="checkmark"></span>
                             <span class="checkbox-label">Ingat saya</span>
                         </label>
-                        <a href="#" class="forgot-link">Lupa password?</a>
+                        <a href="forgot_password.php" class="forgot-link">Lupa password?</a>
                     </div>
 
                     <button type="submit" class="btn-login">
@@ -201,7 +201,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div class="copyright">
-                <p>&copy; 2025 Sistem Informasi RS DB | Tugas Akhir Praktikum Pemrograman Web</p>
+                <p>&copy; 2025 Sistem Informasi Rumah Sakit | Tugas Akhir Praktikum Pemrograman Web</p>
                 <p>Kelompok 02 - Afif, Akeyla, Dara, Nabila Putri</p>
             </div>
         </div>
