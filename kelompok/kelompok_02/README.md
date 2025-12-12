@@ -195,6 +195,33 @@ kelompok_02/
 5. **appointments** - Jadwal appointment/antrian
 6. **medical_records** - Rekam medis pasien
 
+##Screenshot Tampilan Aplikasi
+1. Login
+   <img width="1918" height="1029" alt="image" src="https://github.com/user-attachments/assets/4d298281-9c29-4521-a50f-0a760158fa61" />
+2. Register
+   <img width="1917" height="958" alt="image" src="https://github.com/user-attachments/assets/f63869fc-b2d6-4c9b-bc13-8aff52eac644" />
+3. Lupa Password
+   <img width="1907" height="946" alt="image" src="https://github.com/user-attachments/assets/90b1f70d-1ac1-470b-8a1c-b455ff7b0765" />
+   <img width="1916" height="946" alt="image" src="https://github.com/user-attachments/assets/9b1096ed-160d-40eb-968a-8c7757048da6" />
+   <img width="1910" height="950" alt="image" src="https://github.com/user-attachments/assets/8b1613ad-4c98-4157-8408-7bffafd7cea8" />
+4. Admin
+   <img width="1900" height="945" alt="image" src="https://github.com/user-attachments/assets/9b4d4a50-f3cd-478f-b157-8bab8614a01c" />
+   <img width="1612" height="690" alt="image" src="https://github.com/user-attachments/assets/3852f1be-c312-4388-bbff-40b61465843e" />
+   <img width="1911" height="952" alt="Screenshot 2025-12-12 214640" src="https://github.com/user-attachments/assets/c566adab-4807-4700-9e17-d510b37e66c6" />
+   <img width="1918" height="952" alt="image" src="https://github.com/user-attachments/assets/b2f6d96e-7f65-477d-a7b7-262ade79b1fc" />
+   <img width="1916" height="949" alt="image" src="https://github.com/user-attachments/assets/f54bf14c-723f-4824-bc8b-32e4aadb2979" />
+   <img width="1899" height="952" alt="image" src="https://github.com/user-attachments/assets/13013f3e-e629-4899-af9b-046e17e30fcf" />
+   <img width="1914" height="954" alt="image" src="https://github.com/user-attachments/assets/fae3a0b0-c9fb-4c58-b558-9defda7e5773" />
+5. Dokter
+   <img width="1919" height="864" alt="image" src="https://github.com/user-attachments/assets/133eb446-36f5-42e2-87d6-ecadcf355599" />
+   <img width="1915" height="965" alt="image" src="https://github.com/user-attachments/assets/e8a416a5-c9d1-4a22-a5f2-ea28a6e594b3" />
+   <img width="1917" height="963" alt="image" src="https://github.com/user-attachments/assets/99c96fd6-8e47-4b74-9acf-39b2543650c7" />
+6. Pasien
+   <img width="1898" height="965" alt="image" src="https://github.com/user-attachments/assets/6b58505b-b24f-4573-86bd-2da04b60dee2" />
+   <img width="1919" height="956" alt="image" src="https://github.com/user-attachments/assets/f2688d88-2768-43d7-b5b3-1635e847a6d5" />
+   <img width="1899" height="952" alt="image" src="https://github.com/user-attachments/assets/3cf94be6-0946-4c2f-8ec9-e21fbf9c6382" />
+
+
 ## Kontak
 
 Untuk pertanyaan atau masalah, silakan hubungi anggota kelompok melalui repository ini.
